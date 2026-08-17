@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Happy Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     CONFIG-DRIVEN SITE. All personalization happens in the
+     CONFIG object near the top of the <script> at the bottom
+     of this file: name, passcode, date, photos, letter text.
+     ============================================================ */
+
+  :root{
+    --bg-0:#0a0303;
+    --bg-1:#1c0608;
+    --bg-2:#3d0a0f;
+    --ember:#ff4d5e;
+    --ember-soft:#ff8a93;
+    --rose:#ffc9ce;
+    --cream:#f7e9e4;
+    --gold:#d9a566;
+    --line:rgba(255,255,255,0.14);
+    --shadow-deep: 0 30px 80px rgba(0,0,0,0.55);
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:#000;
+    font-family:'EB Garamond', Georgia, serif;
+    color:var(--cream);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  .display{ font-family:'Cormorant Garamond', Georgia, serif; }
+
+  #stage{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 12px;
+    background:
+      radial-gradient(120% 60% at 50% -10%, var(--bg-2) 0%, var(--bg-0) 55%),
+      #000;
+  }
+
+  #app{
+    position:relative;
+    width:100%;
+    max-width:460px;
+    height:min(calc(100vh - 48px), 920px);
+    border-radius:28px;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 55% at 50% 0%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+    box-shadow:var(--shadow-deep), 0 0 0 1px var(--line);
+    isolation:isolate;
+  }
+
+  #particles{ position:absolute; inset:0; pointer-events:none; z-index:0; }
+  .mote{
+    position:absolute; width:3px; height:3px; border-radius:50%;
+    background:var(--ember-soft); opacity:0.55;
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:.6; }
+    90%{ opacity:.4; }
+    100%{ transform:translateY(-140px) translateX(12px); opacity:0; }
+  }
+
+  .screen{
+    position:absolute; inset:0; z-index:1;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:56px 32px 40px;
+    text-align:center;
+    animation:fadeIn .6s ease both;
+  }
+  .screen.active{ display:flex; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .eyebrow{
+    font-family:'EB Garamond', serif;
+    letter-spacing:.34em;
+    font-size:11px;
+    text-transform:uppercase;
+    color:var(--ember-soft);
+    opacity:.85;
+  }
+  .eyebrow-lined{
+    display:flex; align-items:center; justify-content:center;
+    gap:12px; width:100%; max-width:280px;
+  }
+  .eyebrow-line{
+    flex:1; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,140,150,.5), transparent);
+  }
+
+  /* the avatar + "Locked" text group: centered by default, pinned to a fixed
+     top position once the passkey sheet is opened, so it never overlaps it */
+  .lock-top{
+    position:absolute;
+    left:0; right:0;
+    top:50%;
+    transform:translateY(-50%);
+    display:flex; flex-direction:column; align-items:center;
+    padding:0 32px;
+    z-index:2;
+    transition:top .6s cubic-bezier(.4,0,.2,1), transform .6s cubic-bezier(.4,0,.2,1);
+  }
+  .lock-top.shifted{
+    top:44px;
+    transform:translateY(0);
+  }
+
+  /* ---------- avatar: shows CONFIG.avatarImage as a real photo automatically,
+     falls back to CONFIG.avatarInitial if no image is set ---------- */
+  .avatar-wrap{
+    position:relative;
+    width:132px; height:132px;
+    margin:0 auto 22px;
+    cursor:pointer;
+    border-radius:50%;
+    transition:width .55s cubic-bezier(.4,0,.2,1), height .55s cubic-bezier(.4,0,.2,1), margin-bottom .55s ease;
+  }
+  .avatar-ring{
+    position:absolute; inset:-16px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,80,90,.38) 0%, rgba(255,80,90,.12) 45%, rgba(255,80,90,0) 72%);
+    filter:blur(4px);
+    animation:pulseRing 2.6s ease-in-out infinite;
+  }
+  @keyframes pulseRing{
+    0%,100%{ transform:scale(1); opacity:.65; }
+    50%{ transform:scale(1.08); opacity:1; }
+  }
+  .avatar-mark{
+    width:100%; height:100%; border-radius:50%;
+    background:linear-gradient(155deg,#5c1017,#2a0507 70%);
+    border:2px solid rgba(255,180,185,.55);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif;
+    font-size:44px; font-style:italic; color:var(--rose);
+    overflow:hidden;
+    transition:font-size .55s cubic-bezier(.4,0,.2,1);
+  }
+  .avatar-mark img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar-heart{
+    position:absolute; bottom:-4px; right:2px;
+    width:26px; height:26px; border-radius:50%;
+    background:var(--bg-0); border:1px solid rgba(255,150,160,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:var(--ember);
+    transition:width .55s ease, height .55s ease, font-size .55s ease;
+  }
+
+  /* heart badge sits directly on the bottom edge of the avatar circle,
+     no connecting line */
+  .heart-badge{
+    position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+    width:26px; height:26px; border-radius:50%;
+    background:var(--bg-0); border:1px solid rgba(255,150,160,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:var(--ember);
+    transition:width .55s ease, height .55s ease, font-size .55s ease;
+  }
+
+  h1.title{
+    font-size:34px; font-weight:600; line-height:1.15;
+    margin:0 0 6px;
+    color:var(--cream);
+    letter-spacing:.01em;
+  }
+  p.sub{
+    font-size:16px; font-style:italic; color:var(--rose);
+    opacity:.8; margin:0 0 28px;
+  }
+
+  .lock-tag{
+    font-family:'Cormorant Garamond', serif;
+    font-size:15px; letter-spacing:.4em; text-transform:uppercase;
+    color:var(--ember-soft); margin-top:18px;
+    transition:opacity .3s ease, height .3s ease, margin .3s ease;
+  }
+  .lock-hint{
+    font-size:14px; color:rgba(247,233,228,.55); margin-top:10px; max-width:260px;
+    transition:opacity .3s ease, height .3s ease, margin .3s ease;
+  }
+  .lock-tag.collapsed, .lock-hint.collapsed{
+    opacity:0; height:0; margin:0; overflow:hidden; pointer-events:none;
+  }
+
+  /* avatar "opening" pulse the moment it's tapped, then it shrinks in place
+     (a real size change, not just a visual transform) so the layout reflows
+     cleanly and the keypad sheet below never overlaps it */
+  .avatar-wrap.opened .avatar-mark{
+    animation:avatarOpen .5s ease;
+  }
+  .avatar-wrap.shifted{
+    width:82px; height:82px; margin-bottom:6px;
+  }
+  .avatar-wrap.shifted .avatar-mark{ font-size:28px; }
+  .avatar-wrap.shifted .heart-badge{ width:20px; height:20px; font-size:9px; }
+  @keyframes avatarOpen{
+    0%{ transform:scale(1); }
+    40%{ transform:scale(1.12); box-shadow:0 0 30px rgba(255,90,100,.5); }
+    100%{ transform:scale(1); }
+  }
+
+  /* ---------- gif avatars for loading / special day / birthday screens:
+     shown in their NATURAL shape (no circle crop, no border) once an image
+     or gif is set, so glowing gifs display exactly as authored. When empty,
+     a small neutral placeholder circle is shown instead. ---------- */
+  .gif-avatar{
+    width:170px;
+    margin:0 auto 20px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .gif-avatar img{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .gif-avatar.empty{
+    width:100px; height:100px;
+    border-radius:50%;
+    background:linear-gradient(155deg,#5c1017,#2a0507 70%);
+    border:1px solid rgba(255,180,185,.3);
+  }
+  .gif-avatar-mark{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; color:var(--rose);
+  }
+
+  /* passkey section: floats directly on the same continuous page background
+     (no boxed card, no border seam) so it blends in exactly like the
+     reference — only the content itself slides up into view */
+  .pass-section{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    width:100%;
+    box-sizing:border-box;
+    max-height:calc(100% - 148px);
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px 28px 30px;
+    transform:translateY(100%);
+    opacity:0;
+    pointer-events:none;
+    transition:transform .6s cubic-bezier(.4,0,.2,1), opacity .4s ease;
+    z-index:5;
+  }
+  .pass-section.open{
+    transform:translateY(0);
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .code-display{
+    display:flex; gap:16px; align-items:center; justify-content:center;
+    width:100%; max-width:260px;
+    background:rgba(0,0,0,.35);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 12px;
+    margin:16px 0 18px;
+  }
+  .code-dot{
+    width:13px; height:13px; border-radius:50%;
+    border:1px solid rgba(255,180,185,.6);
+    background:transparent;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .code-dot.filled{ background:var(--ember); transform:scale(1.1); }
+
+  .keypad{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:9px;
+    width:100%; max-width:230px;
+  }
+  .key{
+    aspect-ratio:1;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif;
+    font-size:19px; color:var(--cream);
+    background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(0,0,0,.28));
+    border:1px solid rgba(255,150,160,.14);
+    border-radius:16px;
+    box-shadow:0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    transition:background .12s ease, transform .08s ease, box-shadow .12s ease;
+  }
+  .key:active{ transform:scale(.94); background:rgba(255,90,100,.18); box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  .key.ghost{ border-color:transparent; background:transparent; box-shadow:none; cursor:default; }
+
+  .shake{ animation:shakeX .4s ease; }
+  @keyframes shakeX{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+
+  .hint-line{ margin-top:14px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:rgba(247,233,228,.4); }
+  .hint-line span{ text-decoration:underline; cursor:pointer; color:rgba(247,233,228,.6); }
+
+  .loader-mark{ font-size:56px; margin-bottom:18px; }
+  .loading-bar-track{
+    width:100%; max-width:260px; height:5px; border-radius:3px;
+    background:rgba(255,255,255,.08); overflow:hidden; margin:18px 0 12px;
+  }
+  .loading-bar-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--ember), var(--gold));
+    border-radius:3px;
+    transition:width 1.8s cubic-bezier(.4,0,.2,1);
+  }
+  .loading-tag{ font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:var(--ember-soft); opacity:.8; }
+
+  .counter-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    width:100%; margin:20px 0 8px;
+  }
+  .count-box{ text-align:center; }
+  .count-num{ font-family:'Cormorant Garamond', serif; font-size:46px; font-weight:600; color:var(--cream); line-height:1; }
+  .count-label{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--ember-soft); margin-top:6px; opacity:.85; }
+
+  .btn{
+    margin-top:30px;
+    padding:15px 34px;
+    border-radius:999px;
+    border:1px solid rgba(255,150,160,.5);
+    background:rgba(255,80,90,.08);
+    color:var(--cream);
+    font-family:'Cormorant Garamond', serif;
+    font-size:17px; letter-spacing:.08em;
+    cursor:pointer;
+    transition:background .2s ease, transform .12s ease;
+  }
+  .btn:hover{ background:rgba(255,80,90,.18); }
+  .btn:active{ transform:scale(.97); }
+  .btn.primary{ background:linear-gradient(120deg,#c22636,#7d1620); border-color:transparent; }
+  .btn.primary:hover{ filter:brightness(1.12); }
+  .btn.ghost{ background:transparent; }
+
+  /* ---------- memories carousel: each card auto-shows CONFIG image if present ---------- */
+  .carousel-wrap{ width:100%; }
+  .carousel{
+    display:flex; gap:14px;
+    overflow-x:auto; scroll-snap-type:x mandatory;
+    padding:6px 6px 18px;
+    margin:0 -6px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .carousel::-webkit-scrollbar{ display:none; }
+  .memory-card{
+    flex:0 0 78%;
+    scroll-snap-align:center;
+    border-radius:18px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:linear-gradient(155deg, var(--mc1,#4a1218), var(--mc2,#1c0507));
+    aspect-ratio:3/4;
+    position:relative;
+    display:flex; align-items:flex-end;
+    cursor:pointer;
+  }
+  .memory-card img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+  .memory-card video{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
+  .memory-card .play-badge{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:52px; height:52px; border-radius:50%;
+    background:rgba(10,3,3,.55); border:1px solid rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--cream); font-size:18px;
+    backdrop-filter:blur(2px);
+    z-index:1;
+  }
+  .memory-card .cap{
+    position:relative; width:100%; padding:16px 14px;
+    background:linear-gradient(0deg, rgba(0,0,0,.65), transparent 70%);
+    font-family:'Cormorant Garamond', serif; font-style:italic;
+    font-size:16px; text-align:left; color:var(--rose);
+  }
+  .memory-card .frame-icon{
+    position:absolute; top:14px; left:14px; z-index:1;
+    font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+    color:rgba(255,255,255,.55);
+  }
+  .swipe-tag{ font-size:13px; font-style:italic; color:rgba(247,233,228,.55); margin-bottom:6px; }
+
+  .seal-box{
+    width:100%; max-width:280px;
+    border:1px solid rgba(255,120,130,.4);
+    border-radius:18px;
+    padding:46px 20px;
+    margin:20px 0 8px;
+    cursor:pointer;
+    background:rgba(255,255,255,.02);
+    transition:background .2s ease;
+  }
+  .seal-box:hover{ background:rgba(255,80,90,.06); }
+  .seal-heart{
+    width:64px; height:64px; margin:0 auto 14px;
+    border-radius:50%; border:1px solid rgba(255,120,130,.55);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; color:var(--ember);
+    animation:heartbeat 1.8s ease-in-out infinite;
+  }
+  @keyframes heartbeat{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.08); }
+  }
+  .seal-heart.spinning{
+    animation:sealSpin .9s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes sealSpin{
+    0%{ transform:rotate(0deg) scale(1); }
+    55%{ transform:rotate(200deg) scale(1.12); }
+    100%{ transform:rotate(360deg) scale(1); }
+  }
+  .seal-tag{ font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--cream); opacity:.75; }
+
+  #letterOverlay{
+    position:fixed; inset:0; z-index:50;
+    display:none;
+    align-items:center; justify-content:center;
+    padding:20px;
+    background:rgba(4,1,1,.72);
+    backdrop-filter:blur(3px);
+  }
+  #letterOverlay.active{ display:flex; }
+  .letter-card{
+    width:100%; max-width:400px;
+    max-height:82vh;
+    display:flex; flex-direction:column;
+    border-radius:20px;
+    border:1px solid rgba(255,140,150,.4);
+    background:linear-gradient(160deg,#2c060a,#150304);
+    padding:26px 24px 22px;
+    position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+  }
+  .letter-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px; }
+  .letter-head h2{ font-family:'Cormorant Garamond', serif; font-size:24px; margin:0; color:var(--cream); }
+  .letter-head p{ margin:2px 0 0; font-size:12px; font-style:italic; color:var(--rose); opacity:.75; }
+  .letter-close{
+    width:30px; height:30px; border-radius:50%; flex:none;
+    background:rgba(255,255,255,.06); border:1px solid var(--line);
+    color:var(--cream); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:14px;
+  }
+
+  /* ---------- forgot-passkey photo hint modal: shown when the avatar is
+     tapped again while the keypad is already open. #memoryOverlay (the
+     memories-carousel viewer) shares this exact same styling. ---------- */
+  #hintOverlay, #memoryOverlay{
+    position:fixed; inset:0; z-index:55;
+    display:none;
+    align-items:center; justify-content:center;
+    padding:24px;
+    background:rgba(4,1,1,.78);
+    backdrop-filter:blur(3px);
+  }
+  #hintOverlay.active, #memoryOverlay.active{ display:flex; }
+  .hint-card{
+    width:100%; max-width:340px;
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid rgba(255,140,150,.4);
+    background:#0c0303;
+    position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+  }
+  .hint-card-photo{
+    width:100%;
+    aspect-ratio:4/5;
+    background:linear-gradient(155deg,#5c1017,#2a0507 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif;
+    font-size:96px; font-style:italic; color:var(--rose);
+    overflow:hidden;
+  }
+  .hint-card-photo img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .hint-card-photo video{ width:100%; height:100%; object-fit:contain; display:block; background:#000; }
+  .hint-close{
+    position:absolute; top:12px; right:12px; z-index:2;
+    width:32px; height:32px; border-radius:50%;
+    background:rgba(10,3,3,.6); border:1px solid rgba(255,255,255,.35);
+    color:var(--cream); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:15px;
+    backdrop-filter:blur(2px);
+  }
+  .hint-caption{
+    padding:16px 18px;
+    text-align:center;
+    background:#0a0303;
+    border-top:1px solid rgba(255,90,100,.45);
+    font-family:'Cormorant Garamond', serif;
+    font-size:18px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--cream);
+  }
+  .letter-body{
+    margin-top:14px;
+    background:rgba(0,0,0,.3);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px 18px;
+    overflow-y:auto;
+    text-align:left;
+    font-size:16px;
+    line-height:1.7;
+    color:var(--cream);
+    white-space:pre-wrap;
+  }
+  .letter-body .cursor{ display:inline-block; width:2px; background:var(--ember-soft); animation:blink 1s step-start infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .letter-actions{ display:flex; gap:10px; margin-top:18px; }
+  .letter-actions .btn{ margin-top:0; flex:1; font-size:15px; padding:13px 10px; }
+
+  #confettiLayer{ position:fixed; inset:0; z-index:60; pointer-events:none; overflow:hidden; }
+  .confetto{ position:absolute; top:-20px; border-radius:2px; animation:fall linear forwards; }
+  @keyframes fall{
+    to{ transform:translateY(110vh) rotate(540deg); opacity:.9; }
+  }
+
+  .credit{
+    position:absolute; bottom:10px; left:0; right:0; text-align:center;
+    font-size:9px; letter-spacing:.28em; text-transform:uppercase;
+    color:rgba(255,255,255,.18); z-index:1;
+  }
+
+  /* ---------- floating background music player (plays your own song file) ---------- */
+  #musicWidget{
+    position:absolute; right:14px; bottom:14px; z-index:40;
+    display:flex; flex-direction:column; align-items:flex-end;
+    font-family:'EB Garamond', serif;
+  }
+  #musicWidget.hidden{ display:none; }
+
+  .music-fab{
+    width:50px; height:50px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #4a1015, #120304 75%);
+    border:1px solid rgba(255,150,160,.45);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; position:relative; flex:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .music-fab .note{ font-size:19px; color:var(--ember-soft); transition:opacity .2s ease; }
+  .music-fab .ring{
+    position:absolute; inset:-1px; border-radius:50%;
+    border:1px dashed rgba(255,160,170,.55);
+    animation:spinDisc 5s linear infinite;
+    animation-play-state:paused;
+  }
+  .music-fab.playing .ring{ animation-play-state:running; }
+  .music-fab.playing .note{ animation:notePulse 1.6s ease-in-out infinite; }
+  @keyframes spinDisc{ to{ transform:rotate(360deg); } }
+  @keyframes notePulse{ 0%,100%{ opacity:.75;} 50%{ opacity:1; transform:scale(1.12);} }
+
+  .music-panel{
+    width:238px;
+    max-height:0; opacity:0; overflow:hidden;
+    margin-bottom:0;
+    background:linear-gradient(160deg,#2c060a,#150304);
+    border:1px solid rgba(255,140,150,.35);
+    border-radius:16px;
+    box-shadow:0 16px 40px rgba(0,0,0,.55);
+    transition:max-height .35s cubic-bezier(.4,0,.2,1), opacity .3s ease, margin-bottom .35s ease;
+  }
+  .music-panel.open{ max-height:420px; opacity:1; margin-bottom:12px; }
+
+  .music-panel-inner{ padding:14px 14px 12px; }
+  .music-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .music-eyebrow{
+    font-size:10px; letter-spacing:.26em; text-transform:uppercase;
+    color:var(--ember-soft); opacity:.85;
+  }
+  .music-close{
+    width:22px; height:22px; border-radius:50%;
+    background:rgba(255,255,255,.06); border:1px solid var(--line);
+    color:var(--cream); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:11px; flex:none;
+  }
+
+  .music-track-info{ text-align:left; margin-bottom:10px; }
+  .music-track-info .mi-title{ font-size:15px; color:var(--cream); line-height:1.25; font-family:'Cormorant Garamond', serif; }
+  .music-track-info .mi-artist{ font-size:12px; color:rgba(247,233,228,.55); font-style:italic; margin-top:2px; }
+
+  .music-progress-row{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .music-time{ font-size:10px; color:rgba(247,233,228,.5); width:30px; flex:none; }
+  .music-time.end{ text-align:right; }
+  .music-progress-track{
+    flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,.1);
+    position:relative; cursor:pointer;
+  }
+  .music-progress-fill{
+    position:absolute; left:0; top:0; height:100%; width:0%;
+    border-radius:2px; background:linear-gradient(90deg, var(--ember), var(--gold));
+  }
+
+  .music-controls{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:10px; }
+  .music-ctrl-btn{
+    width:34px; height:34px; border-radius:50%;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,150,160,.3);
+    color:var(--cream); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:13px; -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .music-ctrl-btn:active{ transform:scale(.92); }
+  .music-ctrl-btn.play{
+    width:40px; height:40px; font-size:15px;
+    background:linear-gradient(120deg,#c22636,#7d1620); border-color:transparent;
+  }
+
+  .music-list{ display:flex; flex-direction:column; gap:6px; max-height:120px; overflow-y:auto; margin-top:2px; }
+  .music-item{
+    display:flex; flex-direction:column; text-align:left;
+    padding:8px 10px; border-radius:10px; cursor:pointer;
+    border:1px solid transparent;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .music-item:hover{ background:rgba(255,255,255,.04); }
+  .music-item.active{ background:rgba(255,80,90,.12); border-color:rgba(255,150,160,.35); }
+  .music-item .mi-title{ font-size:13.5px; color:var(--cream); line-height:1.25; }
+  .music-item .mi-artist{ font-size:11px; color:rgba(247,233,228,.55); font-style:italic; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001s !important; animation-iteration-count:1 !important; transition-duration:.001s !important; }
+  }
+
+  @media (max-width:380px){
+    h1.title{ font-size:28px; }
+    .count-num{ font-size:38px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="app">
+    <div id="particles"></div>
+
+    <!-- 1. LOCK SCREEN (photo opens to reveal passkey entry below it, same screen) -->
+    <section class="screen active" id="screen-lock">
+      <div class="lock-top" id="lockTop">
+        <div class="avatar-wrap" id="lockAvatar">
+          <div class="avatar-ring"></div>
+          <div class="avatar-mark" id="avatarMarkLock"></div>
+          <span class="heart-badge">&#10084;</span>
+        </div>
+        <div class="lock-tag display" id="lockTag">Locked</div>
+        <p class="lock-hint" id="lockHint">Click on the picture above to reveal the passkey entry</p>
+      </div>
+
+      <div class="pass-section" id="passSection">
+        <div class="eyebrow eyebrow-lined" id="secureEntryLabel"><span class="eyebrow-line"></span>Secure system entry<span class="eyebrow-line"></span></div>
+        <div class="code-display" id="codeDisplay"></div>
+        <div class="keypad" id="keypad"></div>
+        <div class="hint-line">Hint: <span id="hintTrigger">tap the image again if you forget the passkey</span></div>
+      </div>
+    </section>
+
+    <!-- 3. LOADING SCREEN -->
+    <section class="screen" id="screen-loading">
+      <div class="gif-avatar empty" id="gifWrapLoading">
+        <div class="gif-avatar-mark" id="avatarMarkLoading"></div>
+      </div>
+      <h1 class="title display">Loading something special&hellip;</h1>
+      <div class="loading-bar-track"><div class="loading-bar-fill" id="loadingFill"></div></div>
+      <div class="loading-tag">Just for you</div>
+    </section>
+
+    <!-- 4. REVEAL / SPECIAL DAY SCREEN -->
+    <section class="screen" id="screen-reveal">
+      <div class="eyebrow">It's your</div>
+      <h1 class="title display" style="font-size:40px;">Special Day</h1>
+      <div class="gif-avatar empty" id="gifWrapReveal" style="margin:20px auto;">
+        <div class="gif-avatar-mark" id="avatarMarkReveal"></div>
+      </div>
+      <p class="sub" id="revealMessage">I made something special for you&hellip;</p>
+      <button class="btn primary" id="toBirthdayBtn">Start &rarr;</button>
+    </section>
+
+    <!-- 5. BIRTHDAY / COUNTER SCREEN -->
+    <section class="screen" id="screen-birthday">
+      <div class="gif-avatar empty" id="gifWrapBirthday">
+        <div class="gif-avatar-mark" id="avatarMarkBirthday"></div>
+      </div>
+      <h1 class="title display" id="birthdayHeadline">Happy Birthday</h1>
+      <p class="sub">You have completed</p>
+      <div class="counter-grid" id="ageCounter"></div>
+      <button class="btn primary" id="toMemoriesBtn">Next &rarr;</button>
+    </section>
+
+    <!-- 6. MEMORIES SCREEN -->
+    <section class="screen" id="screen-memories">
+      <div class="eyebrow">A look back</div>
+      <h1 class="title display">Special Memories</h1>
+      <p class="swipe-tag">Swipe for more &#10022;</p>
+      <div class="carousel-wrap">
+        <div class="carousel" id="memoriesCarousel"></div>
+      </div>
+      <button class="btn" id="toLetterBtn">Read your message</button>
+    </section>
+
+    <!-- 7. LETTER TEASER SCREEN -->
+    <section class="screen" id="screen-letter">
+      <div class="eyebrow">One last thing</div>
+      <h1 class="title display">A Letter, Just For You</h1>
+      <p class="sub">Tap the heart to unseal your message&hellip;</p>
+      <div class="seal-box" id="openLetterBtn">
+        <div class="seal-heart" id="sealHeart">&#10084;</div>
+        <div class="seal-tag" id="sealTag">Tap to open</div>
+      </div>
+    </section>
+
+    <!-- FLOATING BACKGROUND MUSIC PLAYER (plays your own song file) -->
+    <div id="musicWidget" class="hidden">
+      <div class="music-panel" id="musicPanel">
+        <div class="music-panel-inner">
+          <div class="music-head">
+            <span class="music-eyebrow">Now playing</span>
+            <div class="music-close" id="musicCloseBtn">&#10005;</div>
+          </div>
+          <div class="music-track-info">
+            <div class="mi-title" id="musicTrackTitle">&mdash;</div>
+            <div class="mi-artist" id="musicTrackArtist"></div>
+          </div>
+          <div class="music-progress-row">
+            <span class="music-time" id="musicTimeCurrent">0:00</span>
+            <div class="music-progress-track" id="musicProgressTrack">
+              <div class="music-progress-fill" id="musicProgressFill"></div>
+            </div>
+            <span class="music-time end" id="musicTimeTotal">0:00</span>
+          </div>
+          <div class="music-controls">
+            <div class="music-ctrl-btn" id="musicPrevBtn" title="Previous">&#9664;&#9664;</div>
+            <div class="music-ctrl-btn play" id="musicPlayBtn" title="Play/Pause">&#9654;</div>
+            <div class="music-ctrl-btn" id="musicNextBtn" title="Next">&#9654;&#9654;</div>
+          </div>
+          <div class="music-list" id="musicList"></div>
+        </div>
+      </div>
+      <div class="music-fab" id="musicFab" title="Music">
+        <div class="ring"></div>
+        <span class="note">&#9835;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORGOT-PASSKEY PHOTO HINT MODAL -->
+<div id="hintOverlay">
+  <div class="hint-card">
+    <div class="hint-close" id="hintCloseBtn">&#10005;</div>
+    <div class="hint-card-photo" id="hintCardPhoto"></div>
+    <div class="hint-caption" id="hintCaption"></div>
+  </div>
+</div>
+
+<!-- MEMORY VIEWER MODAL: opens a photo or video full-size, same styling
+     as the lock-screen forgot-passkey popup -->
+<div id="memoryOverlay">
+  <div class="hint-card">
+    <div class="hint-close" id="memoryCloseBtn">&#10005;</div>
+    <div class="hint-card-photo" id="memoryModalMedia"></div>
+    <div class="hint-caption" id="memoryModalCaption"></div>
+  </div>
+</div>
+
+<!-- LETTER MODAL -->
+<div id="letterOverlay">
+  <div class="letter-card">
+    <div class="letter-head">
+      <div>
+        <h2 class="display">Just for you &#10024;</h2>
+        <p>From my heart to yours</p>
+      </div>
+      <div class="letter-close" id="closeLetterBtn">&#10005;</div>
+    </div>
+    <div class="letter-body" id="letterBody"></div>
+    <div class="letter-actions">
+      <button class="btn primary" id="celebrateBtn" style="margin:0;">Celebrate</button>
+      <button class="btn ghost" id="restartBtn" style="margin:0;">Restart &#8635;</button>
+    </div>
+  </div>
+</div>
+
+<div id="confettiLayer"></div>
+
+<script>
+/* ============================================================
+   CONFIG — edit everything here to personalize the site.
+   ============================================================ */
+const CONFIG = {
+  // 4-digit passcode required to unlock the site
+  passcode: "0101",
+
+  // Shown in a full-photo popup if they tap the avatar again while the
+  // keypad is already open (i.e. they forgot the passkey). Keep it short —
+  // it's displayed as a single caption line under the photo.
+  passcodeHint: "PASSKEY = 0101",
+
+  // Initials/letter shown in the avatar circle IF no photo is set below.
+  avatarInitial: "A",
+
+  // --- ADD YOUR PHOTO HERE ---
+  // Paste an image URL, or a base64 data URI, between the quotes.
+  // Leave as "" to keep showing the initial letter instead.
+  // Example: avatarImage: "https://example.com/her-photo.jpg"
+  avatarImage: "WhatsApp Image 2026-08-17 at 11.23.39 AM (2).jpg",
+
+  // --- GIFS FOR THE LOADING / SPECIAL DAY / BIRTHDAY SCREENS ---
+  // Each is optional: paste a gif/image URL or base64 data URI to show a
+  // moving avatar in that circle. Leave "" to fall back to a heart icon.
+  loadingAvatar: "bubu-bubu-dudu.gif",
+  revealAvatar: "bubu-bubu-dudu.gif",
+  birthdayAvatar: "bubu-bubu-dudu.gif",
+
+  // Date used to calculate the "special day" counter (e.g. anniversary, birth date)
+  specialDate: "2006-08-18",
+
+  revealSub: "I made something special for you\u2026",
+  birthdayHeadline: "Happy Birthday My Girl \ud83c\udf80",
+
+  // Photo & video memories carousel.
+  // Add your photo per card by setting "image" to a URL or base64 data URI.
+  // To use a video instead, set "video" to a URL or base64 data URI (leave
+  // "image" as "" when using video). Leave both empty to keep the
+  // placeholder color gradient.
+  memories: [
+    { caption: "Us Together", image: "WhatsApp Image 2026-08-17 at 11.23.37 AM.jpg", video: "", gradientFrom:"#5c1420", gradientTo:"#210608" },
+    { caption: "", image: "WhatsApp Image 2026-08-17 at 11.23.39 AM (1).jpg", video: "", gradientFrom:"#4a1a14", gradientTo:"#1c0705" },
+    { caption: "Mirror one", image: "WhatsApp Image 2026-08-17 at 11.23.38 AM (2).jpg", video: "", gradientFrom:"#661722", gradientTo:"#22060a" },
+    { caption: "Traditional 1", image: "WhatsApp Image 2026-08-17 at 11.26.56 AM.jpg", video: "", gradientFrom:"#521018", gradientTo:"#1a0405" },
+    { caption: "Traditional 2", image: "WhatsApp Image 2026-08-17 at 11.26.57 AM.jpg", video: "", gradientFrom:"#521018", gradientTo:"#1a0405" },
+   { caption: "Her Eyes", image: "WhatsApp Image 2026-08-17 at 11.23.38 AM (3).jpg", video: "", gradientFrom:"#521018", gradientTo:"#1a0405" },
+    { caption: "The OG one", image: "WhatsApp Image 2026-08-17 at 11.23.38 AM (1).jpg", video: "", gradientFrom:"#521018", gradientTo:"#1a0405" },
+   
+  ],
+
+  // The sealed letter text. Keep paragraphs short — they type out on screen.
+  letter: [
+    "Happy Birthday, Sister \ud83d\udc99",
+    "You are the most beautiful part of my life, and I'm so lucky to have you. Your smile makes my days better, and your presence makes everything feel special. I hope your birthday is filled with happiness, love, and endless smiles.",
+    "Always stay happy \u2014 because your happiness means a lot to me."
+  ],
+
+  // --- BACKGROUND MUSIC ---
+  // A small floating music player appears once the site unlocks and keeps
+  // playing in the background across every screen until the visitor closes it.
+  // Paste a direct link to your song file below (an .mp3 works everywhere;
+  // .m4a/.ogg/.wav also work). If you're hosting the file yourself, any
+  // direct file URL works too. Add more than one to make a mini playlist —
+  // it'll auto-advance to the next song when one ends.
+  //
+  // startAt: where playback should begin instead of 0:00 — e.g. "0:45" or
+  // "1:12" (mm:ss), or just a number of seconds like 45. Leave "" or 0 to
+  // start from the very beginning.
+  music: {
+    enabled: true,
+    autoplay: true, // starts playing right after the passcode is entered
+    playlist: [
+      { title: "Add your song title", artist: "Artist name", url: "https://www.image2url.com/r2/default/audio/1786358376414-4b015f35-7bfd-4298-892e-7ea65468ab15.mp3", startAt: "0:15" }
+    ]
+  }
+};
+
+/* ============================================================
+   APP LOGIC — shouldn't need to change below this line.
+   ============================================================ */
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+function showScreen(id){
+  $$('.screen').forEach(s => s.classList.remove('active'));
+  $('#' + id).classList.add('active');
+}
+
+/* ---------- avatar init: shows a real photo/gif if provided, else falls back ---------- */
+function renderAvatar(targetId, imageValue, fallback){
+  const el = document.getElementById(targetId);
+  if(imageValue){
+    el.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = imageValue;
+    img.alt = '';
+    el.appendChild(img);
+  } else {
+    el.textContent = fallback;
+  }
+}
+renderAvatar('avatarMarkLock', CONFIG.avatarImage, CONFIG.avatarInitial);
+
+/* gif avatars (loading/reveal/birthday): shown in their NATURAL shape when
+   set, with no circle crop, matching an authored glow gif exactly as-is.
+   Falls back to the small neutral placeholder circle when left empty. */
+function renderGifAvatar(wrapId, markId, imageValue){
+  const wrap = document.getElementById(wrapId);
+  if(imageValue){
+    wrap.classList.remove('empty');
+    wrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = imageValue;
+    img.alt = '';
+    wrap.appendChild(img);
+  } else {
+    wrap.classList.add('empty');
+    const mark = document.getElementById(markId);
+    if(mark) mark.textContent = '\u2764';
+  }
+}
+renderGifAvatar('gifWrapLoading', 'avatarMarkLoading', CONFIG.loadingAvatar);
+renderGifAvatar('gifWrapReveal', 'avatarMarkReveal', CONFIG.revealAvatar);
+renderGifAvatar('gifWrapBirthday', 'avatarMarkBirthday', CONFIG.birthdayAvatar);
+
+/* ---------- ambient particles ---------- */
+(function particles(){
+  const layer = $('#particles');
+  const n = 22;
+  for(let i=0;i<n;i++){
+    const m = document.createElement('div');
+    m.className = 'mote';
+    m.style.left = Math.random()*100 + '%';
+    m.style.top = (60 + Math.random()*40) + '%';
+    m.style.animationDuration = (6 + Math.random()*8) + 's';
+    m.style.animationDelay = (Math.random()*8) + 's';
+    layer.appendChild(m);
+  }
+})();
+
+/* ---------- lock: tapping the photo opens the passkey entry below it ---------- */
+let passOpen = false;
+
+function openPasskey(){
+  if(passOpen) return;
+  passOpen = true;
+  $('#lockAvatar').classList.add('opened');
+  $('#lockTag').classList.add('collapsed');
+  $('#lockHint').classList.add('collapsed');
+  // slight delay so the pulse animation is visible before the photo starts moving up
+  setTimeout(() => {
+    $('#lockAvatar').classList.add('shifted');
+    $('#lockTop').classList.add('shifted');
+  }, 80);
+  $('#passSection').classList.add('open');
+}
+
+/* forgot-passkey modal: shows the photo big with the hint written on it,
+   opened by tapping the avatar again once the keypad is already showing */
+function openHintModal(){
+  const photoEl = $('#hintCardPhoto');
+  photoEl.innerHTML = '';
+  if(CONFIG.avatarImage){
+    const img = document.createElement('img');
+    img.src = CONFIG.avatarImage;
+    img.alt = '';
+    photoEl.appendChild(img);
+  } else {
+    photoEl.textContent = CONFIG.avatarInitial;
+  }
+  $('#hintCaption').textContent = CONFIG.passcodeHint;
+  $('#hintOverlay').classList.add('active');
+}
+function closeHintModal(){
+  $('#hintOverlay').classList.remove('active');
+}
+
+$('#lockAvatar').addEventListener('click', () => {
+  if(!passOpen){
+    openPasskey();
+  } else {
+    openHintModal();
+  }
+});
+$('#hintTrigger').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openHintModal();
+});
+$('#hintCloseBtn').addEventListener('click', closeHintModal);
+$('#hintOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'hintOverlay') closeHintModal();
+});
+
+/* ---------- passcode keypad ---------- */
+let entered = "";
+const codeDisplay = $('#codeDisplay');
+const keypad = $('#keypad');
+
+/* real keypad click tone, embedded directly as base64 so the site stays a
+   single self-contained file with no external sound file to host. */
+const KEY_CLICK_SOUND = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//OEwAAAAAAAAAAAAEluZm8AAAAPAAAADwAADAAAICAgICAgMDAwMDAwMEBAQEBAQFBQUFBQUFBgYGBgYGBgcHBwcHBwgICAgICAgJCQkJCQkJCgoKCgoKCwsLCwsLCwwMDAwMDAwNDQ0NDQ0ODg4ODg4ODw8PDw8PDw////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQDYAAAAAAAAAwAKeItJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OExAAiC41cNEsLyQikwn9XUXsTuovc/JsQvYTUTRCwkRwvzhet1GTmyAqTBMSE8J5KLbaC9guUIR4GwwjUXSVWcYR1f/zf6uUZMvbYnV1bUTi9iGBk6MSiH4kHcEMDK6JQ/S9L5vz39MzX43L0bSF0lDYGAjnEObkz39/fTbXpuf/////9ndnY6DRIcCC5F1MwociqtFZzfDVoNQF3EPDALBhwV+Dnd0sfghASAfmnkr9OR0fAQMCh0EZwlPgh//OExCorI4W0AU9IAJUECMLvvAuJ5Ywvv/uaTSAED25y4Gxz4Iw22RtCgVgmJ9n6KAAE85//qMhhjP/1AQP38UBBVEeJNz+uIAACf3ogQhtG9s6G0YrfAgMCt8E0cyNvfaNZBckCBGjnKH9Q3rk+1i8m51Bffc8///8J///1D6ox/6uLdIItwi3EDsP//9b6AmFXLMBaZrkVq32Xm7FySXdXcTCiIywQrUboGgApgP3gFOKRrL5gaGAAywASgDXA//OExDAw5AIAA5uYA5gN5op1LWpYX/Dlw4YChyGPWqs3ppIQtLC6AX0D1gywSLKW1TsyjDcNWDyKDFKiC49h89Tb0Hvrdao4hBAPuI4GgMYNkXOI066C9+xogerSW61COw28ZEUGfGXIsQQexWg4B0P93v+hdq3Z0PyIF88boGZeKheGUGQUs3WZ19L//69v//uXzY0ImLMFwGzs20iRAjq26u9XW9XPZ3y7XWbAYwzmcMsdxWthISSaKMRdqeaw//OExB8vyzK6X5l5AqDuGy5UyciagwCGPZU1FBoDfLGpKP3hB0UjFkAzONnIRHlcHD625Q0cOBUG4LYWBaOhCHO1GdgiscmkGXwyCXu4jAwOEfGsOtwXODDjiHnHHOcy3OtIjPe1Ke9sVg1/rzTZ1Y81pscH97vIk16Us8iP8W+v8YzWud+993v9X3i+//f/////P1//////5n6ohx3lNRKUj/v7///+BzdDiEhVinJfPSScj1Bb3R1FzGTntKNR//OExBIsOwaIAZqgACn9N+pAOSE0DcAGJAjPCMwECCVAaBAaLYBhQgN4iZB34FkJCpAZDeFp5SOHw1UQ1iBEMJ8tmJmM8XDhgdKYyo1S6QEZWbD5Hms8VSYJ3KBmQFzpdTIw/p1D8hUt01rdaaaVa1upZvrXd1nz1Zuqs2sbmtRofamhWblemtBa0j1ZohWbLzTUvZWpBLN1aT3T1ua1mC0nUOtKf+mp6/111iAN1O+mpHn5JaOX15RGsoDLqmCE//OExBQqo4pwDduoACbpHm0gggDUP2Cu7GX9WyzFeoEAOBhYOgcBAgGFwYGCieFQPKWdSSFeE2muLWjlIn0WJA1qGsPKKjMMRImp130j6RSFLC2o0T3fW+xgqtE/UXFaKWWC8lL7a0WyI2MEn0TCkQItVJWyPolIbLfUP5WSce+6s4RFjyD/y85ozvqTaZMgh6nPVpU/ZAruo1/nTRuRFxT5LoqwLR0GK0JZxTShrzhVJXYhceZ6Khox5jDFoQay//OExBwqQ75kouSLPIOqbUsu4VQDRdzFQWRx6/rNU9vPdWf8+FaKy2IiS7XFTdAZo2xWB5poAHSU3Y/sYpToQiYvUa8xed7lHz9MneUOSg7GlS1Z3ixZYU92J2dE9mtRslWoZQ+5SFRau1h8jfY6Qz0mWcDRYTETh5NY5RMRZ0NTIiBo7bZgjUTJ6BRGH1Npjhxi/2OdB8nm65IgACBiQBuqhAW6/Dp46hUXqXaHOVu2reaUAELHmdavr85LE3HR//OExCYl07KOPtPFEbAUIEyW30hw5EMQhnf2pBG4XA6FArp4EB4wPHkXfopGRkZHiFR7QHjxQKxWTQE4PxmTjJAu/AAAAEEXshO9RXdtBOK6+J/3yv/dEcp7+QW8v+Okv+9/+WzfDCEBmUvwwk4G9m8wdqn91Bw3n96Pl/p/agCATuBEBdWZojpll5GfAeJwaKzmRYcXJ4XFs8tRmWPeX2Nqi75mGiilaKVAsQhUEQAgiJYLBYKikUhklZoiFQpF//OExEEhOV58FmYSjCKWaREQq6pKhj5ERMRIWYLSWRIkUfSyJEOf3Ep1R494NfLCUO4lnuHRKvlTp7lXQV+HSB0GvLHsRHoiBqgFrAqCrNfXyHVsHuzhzmK1JfBYSRwhFZxq23IAoxkjI5Q5YiLSI1R4y2GVSwoZKXtDscUCYNVsfyYf4eRgqjQk0alOsSNO2jfBRxlzu8USqecDJa/kz0Qwo7W+iF2KuaisUlNSiS/+UtSsnhQxrasNCJ/eLnuy//OExG8fSkZIDMmFLG0ISSA5qe9Q+oq5Op/1KkOJ3woUAnTBgkuQGyqoLIDodoKkk+EwUADaNsmJJ4GfAMJN6oxFoOeCAKUQhGHP+8myOBjBchQMvWdIM67ETyhOxrcMJkLbfV1iL1JCFcqspSkoDWRSlPQlWVV3OrScoMRMot0UTOQyBHZaVOdxJ5me1GdJEDqj6kZXrUrKkh2+3LyWqVf//////wUO1RhwgKXs7SSpmWcKnRazHzcqLSp/nCTG//OExKQjC8IoANJFDGJLmXczlyU5U6RKFQMillWAiJiIAwaaESEhFIpRIkSIKAiRIkS5yTGkZyfJpEltEiXakplGZciRRSqt5JLsiRRNz9zaOSJJftWTMkSMokUlzP/ajZ/eZ5ZIltV/VT+RWARgUBqpVYaw7FAC7qBpT//9Z71zv8kqbhJgkRxgmQ5XR/O5XsVuZiehqSwp5sV4Q0IyhKtokQvU2JKSWCcqIFyO8elyi83R6UbVhZefyFedH1zk//OExMojSlIgKsJMyMdqSR1qVSbEuIQAQfe0uwQgPOtGT0JJJtB6BE1tPnIkogmJs6OI69a1qnSo5dmUwhHtrHRk2YnrCBAojV//mkRMwLwNR7fmkI9Z1ocF0F8///9AlAAhNJv/uQkppqsd///28F0ASJr/1FUWU//5UFkGmiLVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQtBWZTjbd/+jw7QShcHsfF23///MTMT//1dOaki//OExO8rzBHQAHsVUZKJseyUikqMEzl/ExE/+2IfX8TETEuakiYKJsurpzZZdOakUlRgmcXWc1IKDIdv/6J6oqIqfRP6r/+xihgoMIcjtqv2MVSO3//9jFBIdvjVT/3ERCWLLoG83JXf+40hIhkPlEbDeLJMQU1FMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//OExNAg7C1hnliT7aqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqMuxMQU1FMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//OExE4AgAQAAMgAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
+function playKeySound(isBack){
+  try{
+    const clip = new Audio(KEY_CLICK_SOUND);
+    clip.volume = 0.65;
+    clip.play().catch(() => { /* blocked until first user gesture; harmless */ });
+  }catch(e){ /* audio not available, fail silently */ }
+}
+
+function renderDots(){
+  codeDisplay.innerHTML = "";
+  for(let i=0;i<CONFIG.passcode.length;i++){
+    const d = document.createElement('div');
+    d.className = 'code-dot' + (i < entered.length ? ' filled' : '');
+    codeDisplay.appendChild(d);
+  }
+}
+renderDots();
+
+function buildKeypad(){
+  const layout = ["1","2","3","4","5","6","7","8","9","","0","back"];
+  layout.forEach(k => {
+    const key = document.createElement('div');
+    if(k === ""){ key.className = "key ghost"; }
+    else{
+      key.className = "key";
+      key.textContent = k === "back" ? "\u232B" : k;
+      key.addEventListener('click', () => handleKey(k));
+    }
+    keypad.appendChild(key);
+  });
+}
+buildKeypad();
+
+function handleKey(k){
+  playKeySound(k === 'back');
+  if(k === "back"){
+    entered = entered.slice(0,-1);
+    renderDots();
+    return;
+  }
+  if(entered.length >= CONFIG.passcode.length) return;
+  entered += k;
+  renderDots();
+  if(entered.length === CONFIG.passcode.length){
+    setTimeout(checkCode, 150);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if(!passOpen) return;
+  if(/^[0-9]$/.test(e.key)) handleKey(e.key);
+  if(e.key === 'Backspace') handleKey('back');
+});
+
+function checkCode(){
+  if(entered === CONFIG.passcode){
+    startLoading();
+    revealMusicWidget();
+  }else{
+    codeDisplay.classList.add('shake');
+    setTimeout(() => {
+      codeDisplay.classList.remove('shake');
+      entered = "";
+      renderDots();
+    }, 400);
+  }
+}
+
+/* ---------- loading ---------- */
+function startLoading(){
+  showScreen('screen-loading');
+  requestAnimationFrame(() => {
+    $('#loadingFill').style.width = '100%';
+  });
+  setTimeout(buildReveal, 1900);
+}
+
+/* ---------- date math ---------- */
+function diffFromDate(dateStr){
+  const start = new Date(dateStr);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  let days = now.getDate() - start.getDate();
+  if(days < 0){
+    months -= 1;
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  if(months < 0){
+    years -= 1;
+    months += 12;
+  }
+  return { years, months, days };
+}
+
+function renderCounter(gridId, dateStr){
+  const { years, months, days } = diffFromDate(dateStr);
+  const grid = $('#' + gridId);
+  grid.innerHTML = "";
+  [["years",years],["months",months],["days",days]].forEach(([label,val]) => {
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="count-box">
+        <div class="count-num display">${val}</div>
+        <div class="count-label">${label}</div>
+      </div>`);
+  });
+}
+
+/* ---------- reveal screen ---------- */
+function buildReveal(){
+  $('#revealMessage').textContent = CONFIG.revealSub;
+  showScreen('screen-reveal');
+}
+
+$('#toBirthdayBtn').addEventListener('click', () => {
+  $('#birthdayHeadline').textContent = CONFIG.birthdayHeadline;
+  renderCounter('ageCounter', CONFIG.specialDate);
+  showScreen('screen-birthday');
+});
+
+/* ---------- memories carousel ---------- */
+function buildMemories(){
+  const track = $('#memoriesCarousel');
+  track.innerHTML = "";
+  CONFIG.memories.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.style.setProperty('--mc1', m.gradientFrom);
+    card.style.setProperty('--mc2', m.gradientTo);
+    if(m.video){
+      const vid = document.createElement('video');
+      vid.src = m.video;
+      vid.muted = true;
+      vid.loop = true;
+      vid.autoplay = true;
+      vid.playsInline = true;
+      card.appendChild(vid);
+      card.insertAdjacentHTML('beforeend', `<div class="play-badge">&#9654;</div>`);
+    } else if(m.image){
+      const img = document.createElement('img');
+      img.src = m.image;
+      img.alt = '';
+      card.appendChild(img);
+    }
+    card.insertAdjacentHTML('beforeend', `
+      <div class="frame-icon">&#10022; memory</div>
+      <div class="cap">${m.caption}</div>`);
+    card.addEventListener('click', () => openMemoryModal(m));
+    track.appendChild(card);
+  });
+}
+
+/* opens a memory (photo or video) full-size, styled exactly like the
+   lock-screen forgot-passkey popup */
+function openMemoryModal(m){
+  const mediaEl = $('#memoryModalMedia');
+  mediaEl.innerHTML = '';
+  if(m.video){
+    const vid = document.createElement('video');
+    vid.src = m.video;
+    vid.controls = true;
+    vid.autoplay = true;
+    vid.playsInline = true;
+    mediaEl.appendChild(vid);
+  } else if(m.image){
+    const img = document.createElement('img');
+    img.src = m.image;
+    img.alt = '';
+    mediaEl.appendChild(img);
+  } else {
+    mediaEl.textContent = '\u2764';
+  }
+  $('#memoryModalCaption').textContent = m.caption || '';
+  $('#memoryOverlay').classList.add('active');
+}
+function closeMemoryModal(){
+  const vid = $('#memoryModalMedia video');
+  if(vid) vid.pause();
+  $('#memoryOverlay').classList.remove('active');
+}
+$('#memoryCloseBtn').addEventListener('click', closeMemoryModal);
+$('#memoryOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'memoryOverlay') closeMemoryModal();
+});
+
+$('#toMemoriesBtn').addEventListener('click', () => {
+  buildMemories();
+  showScreen('screen-memories');
+});
+
+$('#toLetterBtn').addEventListener('click', () => showScreen('screen-letter'));
+
+/* ---------- letter modal + typewriter ---------- */
+let typing = false;
+let letterOpening = false;
+function openLetter(){
+  $('#letterOverlay').classList.add('active');
+  const body = $('#letterBody');
+  typing = true;
+  const fullText = CONFIG.letter.join('\n\n');
+  let i = 0;
+
+  body.textContent = "";
+  const textNode = document.createTextNode("");
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  cursor.innerHTML = '&nbsp;';
+  body.appendChild(textNode);
+  body.appendChild(cursor);
+
+  function tick(){
+    if(!typing) return;
+    if(i <= fullText.length){
+      textNode.textContent = fullText.slice(0, i);
+      i += 2;
+      body.scrollTop = body.scrollHeight;
+      setTimeout(tick, 16);
+    }
+  }
+  tick();
+}
+$('#openLetterBtn').addEventListener('click', () => {
+  if(letterOpening) return;
+  letterOpening = true;
+  $('#sealHeart').classList.add('spinning');
+  $('#sealTag').textContent = 'Opening letter\u2026';
+  setTimeout(() => {
+    openLetter();
+    // reset the seal so it's ready to replay after a restart
+    $('#sealHeart').classList.remove('spinning');
+    $('#sealTag').textContent = 'Tap to open';
+    letterOpening = false;
+  }, 900);
+});
+$('#closeLetterBtn').addEventListener('click', () => {
+  typing = false;
+  $('#letterOverlay').classList.remove('active');
+});
+
+/* ---------- celebrate / confetti ---------- */
+function burstConfetti(){
+  const layer = $('#confettiLayer');
+  const colors = ['#ff4d5e','#ff8a93','#d9a566','#ffc9ce','#ffffff'];
+  for(let i=0;i<80;i++){
+    const c = document.createElement('div');
+    c.className = 'confetto';
+    const size = 5 + Math.random()*6;
+    c.style.width = size + 'px';
+    c.style.height = (size*0.4) + 'px';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration = (2.4 + Math.random()*1.8) + 's';
+    c.style.animationDelay = (Math.random()*0.6) + 's';
+    layer.appendChild(c);
+    setTimeout(() => c.remove(), 5000);
+  }
+}
+$('#celebrateBtn').addEventListener('click', burstConfetti);
+
+/* ---------- restart ---------- */
+$('#restartBtn').addEventListener('click', () => {
+  typing = false;
+  letterOpening = false;
+  $('#sealHeart').classList.remove('spinning');
+  $('#sealTag').textContent = 'Tap to open';
+  $('#letterOverlay').classList.remove('active');
+  $('#hintOverlay').classList.remove('active');
+  closeMemoryModal();
+  entered = "";
+  renderDots();
+  $('#loadingFill').style.width = '0%';
+  passOpen = false;
+  $('#lockAvatar').classList.remove('opened');
+  $('#lockAvatar').classList.remove('shifted');
+  $('#lockTop').classList.remove('shifted');
+  $('#lockTag').classList.remove('collapsed');
+  $('#lockHint').classList.remove('collapsed');
+  $('#passSection').classList.remove('open');
+  showScreen('screen-lock');
+  if(typeof window.stopMusicWidget === 'function'){ window.stopMusicWidget(); }
+});
+
+/* ============================================================
+   FLOATING BACKGROUND MUSIC PLAYER (plays a song file you provide)
+   ============================================================ */
+(function musicPlayer(){
+  const cfg = CONFIG.music;
+  const widget = $('#musicWidget');
+  if(!cfg || !cfg.enabled){ return; }
+
+  const playlist = cfg.playlist.filter(s => s.url);
+  if(playlist.length === 0){ return; } // nothing to play
+
+  const audio = new Audio();
+  audio.preload = 'auto';
+  audio.loop = false;
+
+  let index = 0;
+  let isPlaying = false;
+  let panelOpen = false;
+  let hasAutostarted = false;
+  let unlocked = false;
+  let seeking = false;
+  let currentStartAt = 0;
+
+  const fab = $('#musicFab');
+  const panel = $('#musicPanel');
+  const playBtn = $('#musicPlayBtn');
+  const listEl = $('#musicList');
+  const titleEl = $('#musicTrackTitle');
+  const artistEl = $('#musicTrackArtist');
+  const fillEl = $('#musicProgressFill');
+  const trackEl = $('#musicProgressTrack');
+  const curTimeEl = $('#musicTimeCurrent');
+  const totalTimeEl = $('#musicTimeTotal');
+
+  function fmtTime(sec){
+    if(!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+
+  // accepts a number of seconds, or a "mm:ss" / "h:mm:ss" string
+  function parseStartAt(v){
+    if(v === undefined || v === null || v === '') return 0;
+    if(typeof v === 'number') return Math.max(0, v);
+    const parts = String(v).split(':').map(p => parseFloat(p)).filter(n => !isNaN(n));
+    if(parts.length === 0) return 0;
+    let secs = 0;
+    for(const p of parts){ secs = secs * 60 + p; }
+    return Math.max(0, secs);
+  }
+
+  function renderList(){
+    listEl.innerHTML = '';
+    if(playlist.length < 2) return; // no need to show a list for a single song
+    playlist.forEach((song, i) => {
+      const item = document.createElement('div');
+      item.className = 'music-item' + (i === index ? ' active' : '');
+      item.innerHTML = `<span class="mi-title">${song.title}</span><span class="mi-artist">${song.artist || ''}</span>`;
+      item.addEventListener('click', () => loadTrack(i, true));
+      listEl.appendChild(item);
+    });
+  }
+
+  function updatePlayIcon(){
+    playBtn.innerHTML = isPlaying ? '&#10073;&#10073;' : '&#9654;';
+    fab.classList.toggle('playing', isPlaying);
+  }
+
+  function updateInfo(){
+    const song = playlist[index];
+    titleEl.textContent = song.title || 'Untitled';
+    artistEl.textContent = song.artist || '';
+    renderList();
+  }
+
+  function loadTrack(i, autoplay){
+    index = (i + playlist.length) % playlist.length;
+    currentStartAt = parseStartAt(playlist[index].startAt);
+    audio.src = playlist[index].url;
+    updateInfo();
+    if(autoplay){ attemptPlay(); }
+  }
+
+  function attemptPlay(){
+    const p = audio.play();
+    if(p && p.catch){ p.catch(() => { /* blocked until a tap; fab still shows paused state */ }); }
+  }
+
+  audio.addEventListener('play', () => { isPlaying = true; updatePlayIcon(); });
+  audio.addEventListener('pause', () => { isPlaying = false; updatePlayIcon(); });
+  audio.addEventListener('loadedmetadata', () => {
+    totalTimeEl.textContent = fmtTime(audio.duration);
+    if(currentStartAt > 0 && currentStartAt < audio.duration){
+      audio.currentTime = currentStartAt;
+    }
+  });
+  audio.addEventListener('timeupdate', () => {
+    if(seeking) return;
+    curTimeEl.textContent = fmtTime(audio.currentTime);
+    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    fillEl.style.width = pct + '%';
+  });
+  audio.addEventListener('ended', () => {
+    if(playlist.length > 1){ loadTrack(index + 1, true); }
+  });
+
+  trackEl.addEventListener('click', (e) => {
+    const rect = trackEl.getBoundingClientRect();
+    const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    if(audio.duration){ audio.currentTime = pct * audio.duration; }
+  });
+
+  loadTrack(0, false);
+
+  fab.addEventListener('click', () => {
+    panelOpen = !panelOpen;
+    panel.classList.toggle('open', panelOpen);
+  });
+  $('#musicCloseBtn').addEventListener('click', () => {
+    panelOpen = false;
+    panel.classList.remove('open');
+  });
+  playBtn.addEventListener('click', () => {
+    if(audio.paused){ attemptPlay(); } else { audio.pause(); }
+  });
+  $('#musicPrevBtn').addEventListener('click', () => loadTrack(index - 1, true));
+  $('#musicNextBtn').addEventListener('click', () => loadTrack(index + 1, true));
+
+  // exposed so the unlock flow can reveal the widget + start playback on a real tap gesture
+  window.revealMusicWidget = function(){
+    widget.classList.remove('hidden');
+    unlocked = true;
+    if(cfg.autoplay && !hasAutostarted){
+      hasAutostarted = true;
+      attemptPlay();
+    }
+  };
+
+  // exposed so Restart can fully stop playback and hide the widget again
+  window.stopMusicWidget = function(){
+    audio.pause();
+    isPlaying = false;
+    updatePlayIcon();
+    panelOpen = false;
+    panel.classList.remove('open');
+    widget.classList.add('hidden');
+    unlocked = false;
+    hasAutostarted = false;
+    loadTrack(0, false);
+    fillEl.style.width = '0%';
+    curTimeEl.textContent = '0:00';
+  };
+})();
+
+// no-op fallback if music is disabled/misconfigured, so the unlock flow never errors
+if(typeof window.revealMusicWidget !== 'function'){
+  window.revealMusicWidget = function(){};
+}
+if(typeof window.stopMusicWidget !== 'function'){
+  window.stopMusicWidget = function(){};
+}
+</script>
+</body>
+</html>
